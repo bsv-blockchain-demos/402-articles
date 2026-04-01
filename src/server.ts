@@ -89,7 +89,7 @@ function articleCard(a: Omit<Article, 'content'>) {
 app.get('/', (req, res) => {
   const articles = getAllArticles()
   const cards = articles.map(a => articleCard(a)).join('')
-  res.send(pageShell('The BSV Reader', cards))
+  res.send(pageShell('The NOW\u2122 Times', cards))
 })
 
 app.get('/.well-known/bsv-identity', (req, res) => {
