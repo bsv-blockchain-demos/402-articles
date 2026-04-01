@@ -13,7 +13,7 @@ export const articles: Article[] = [
   {
     slug: 'chronicle-activates',
     title: 'BSV Association Restores "Original Protocol," Promises It Will Be Different This Time',
-    author: 'Connor Murray',
+    author: 'Deigan Cullenskink',
     date: '2026-04-07',
     excerpt: 'Man who has been in BSV "since day one" celebrates restoration of opcodes nobody asked for.',
     image: '/g4.png',
@@ -68,7 +68,7 @@ export const articles: Article[] = [
   {
     slug: 'runar-playground',
     title: 'Siggi Releases IDE That Supports 8 Languages, Used by 8 People',
-    author: 'Siggi Oskarsson',
+    author: 'Deigan Cullenskink',
     date: '2026-03-14',
     excerpt: 'Groundbreaking developer tool achieves perfect 1:1 language-to-user ratio.',
     image: '/g2.png',
@@ -105,50 +105,9 @@ export const articles: Article[] = [
     price: 75
   },
   {
-    slug: 'ubi-destroys-civilisation',
-    title: 'Dr. Wright Publishes 47-Page Takedown of UBI, Cites Self 31 Times',
-    author: 'Dr. Rev. Craig S. Wright Esq PhD etc',
-    date: '2026-04-01',
-    excerpt: 'Man who has never held a normal job explains why unconditional income is bad for work ethic.',
-    image: '/g1.png',
-    content: `
-      <p class="lead">LONDON &mdash; Dr. Rev. Craig Steven Wright Esq PhD CPA etc has published a 47-page academic paper arguing that Universal Basic Income will destroy civilisation, mental health, and "the very fabric of reciprocity that separates man from beast." The paper cites 31 works by Dr. Wright himself, 4 by people who agree with Dr. Wright, and 1 by someone who doesn't but whose quote was taken out of context.</p>
-
-      <h2>The Paper Nobody Asked For</h2>
-      <p>The paper, titled "UBI, Dominance Hierarchies, and the Totalitarian Impulse: A Multidisciplinary Refutation With Applications to Bitcoin (The Real One)," appeared this morning on a WordPress blog formatted to look like a journal. TNT can confirm it has not been peer-reviewed by anyone other than Dr. Wright's cat, Mr. Fluffington, who reportedly walked across the keyboard and added three semicolons to the abstract.</p>
-      <p>"This is the most important economic paper since my last one," Dr. Wright told TNT in an exclusive interview. "People think UBI will free them. In reality, it creates a panopticon of fiscal dependency. I would know. I invented the concept of fiscal dependency in 2008. I have the Slack messages to prove it."</p>
-
-      <h2>Finland Destroyed, Apparently</h2>
-      <p>A significant portion of the paper is devoted to the Finnish basic income experiment, which Dr. Wright describes as "a catastrophic failure that proves everything I've been saying since before Finland existed." The experiment gave 2,000 unemployed Finns a monthly payment with no conditions. Employment increased by 1.5 days per year.</p>
-      <p>"1.5 days," Dr. Wright repeated, slamming his fist on a table that turned out to be a bonded courier's briefcase. "That's not even a full weekend. The Finns have proven that free money makes people lazy. Also, I invented weekends. Check the patent."</p>
-      <p>When TNT pointed out that 1.5 days was technically an <em>increase</em> in employment, Dr. Wright threatened to sue us for "misrepresenting statistical noise in a manner calculated to harm my reputation as the inventor of statistics."</p>
-
-      <h2>Dominance Hierarchies and the Lobster Question</h2>
-      <p>The paper's most creative section invokes evolutionary psychiatrist John Price's 1967 work on dominance hierarchies. Dr. Wright argues that UBI does not eliminate status competition but merely "shifts the arena from the workplace to the welfare office," creating a "quasi-caste of non-participants" who will spiral into "chronic low-status signalling."</p>
-      <p>"Imagine a world where your rank is determined not by competence but by your relationship to a central fiscal authority," Dr. Wright explained, apparently without irony, from behind a podium to a room full of people whose rank in BSV is determined entirely by their relationship to Calvin Ayre.</p>
-      <p>Dr. Wright also noted that lobsters have serotonin-based dominance hierarchies and do not receive UBI. "Lobsters are successful," he said. "They've been around for 350 million years. Have you tried giving a lobster a basic income? No. Because lobsters understand that meaning comes from competence and contribution, not from government handouts."</p>
-      <p>When asked if he had ever studied lobsters, Dr. Wright said he had "multiple PhDs in marine biology, but the universities involved have asked me not to name them for legal reasons."</p>
-
-      <h2>The References Section</h2>
-      <p>TNT's fact-checking department (an intern with Google Scholar) attempted to verify the paper's 42 references. Of these:</p>
-      <p>31 were by Dr. Wright or "C.S. Wright" or "Satoshi Nakamoto (Wright, C.)"</p>
-      <p>4 were real academic papers, cited correctly</p>
-      <p>3 were blog posts from nChain's website, now returning 404 errors</p>
-      <p>2 were links to court filings in which Dr. Wright was the defendant</p>
-      <p>1 was a recipe for Thai green curry that appears to have been included by accident, though Dr. Wright insists it "demonstrates the importance of price signals in resource allocation"</p>
-      <p>The paper concludes with a 900-word section arguing that Bitcoin (BSV) solves all the problems UBI claims to address, "without the totalitarian overhead." When TNT asked how a blockchain with twelve active users solves global poverty, Dr. Wright ended the interview and had his lawyer send us a cease-and-desist for "defamation by question."</p>
-
-      <h2>Community Response</h2>
-      <p>Reaction in the BSV Slack was immediate and unanimous. Seven members added a flexing arm emoji to Dr. Wright's announcement post. One member, @iworshipcraig_SV, described the paper as "the most important work of political economy since The Republic, which Craig also wrote."</p>
-      <p>Calvin Ayre tweeted: "My friend Craig has once again proven that he is the smartest man alive. UBI is communism. BSV fixes this. Buy BSV."</p>
-      <p>At press time, Dr. Wright was reportedly drafting a follow-up paper arguing that public libraries are "a Marxist surveillance apparatus" and that he invented the Dewey Decimal System in 1997.</p>
-    `,
-    price: 150
-  },
-  {
     slug: 'tetheral-reserve-bank',
     title: 'Kurt Wuckert Jr Discovers Tether Is Bad, Publishes 9,000-Word Expos&eacute; With 35 Footnotes',
-    author: 'Kurt Wuckert Jr',
+    author: 'Deigan Cullenskink',
     date: '2026-03-25',
     excerpt: 'Bitcoin Historian uncovers what everyone already knew, adds footnotes.',
     image: '/g3.png',

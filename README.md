@@ -1,36 +1,78 @@
-# BSV Article Platform
+# The NOW™ Times
 
-A Substack-like article reader with BSV 402 payment middleware.
+A paywalled micro-parody publication powered by BSV 402 micropayments.
 
-## What we're doing here
+## Quick Start with Docker Compose
 
-This demo implements a paywalled content platform using Bitcoin SV (BSV) micropayments via the 402 Payment Required HTTP status code and custom headers (BRC-29 inspired).
+### 1. Create your `.env` file
 
-### Features
-- Hardcoded sample articles with prices (100 sats each)
-- Express server with payment middleware
-- Wallet integration using @bsv/sdk and @bsv/wallet-toolbox
-- Strict header-based payment validation for article access
-- Returns 402 with payment instructions when no payment provided
+```sh
+cp .env.example .env
+```
 
-## How it works
+Edit `.env` and set your BSV private key:
 
-1. GET `/` - Lists available articles
-2. GET `/articles/:slug` - Protected route
-   - No `x-bsv-*` headers? Returns 402 with `x-bsv-sats: 100` and server identity
-   - Valid payment headers? Validates tx, internalizes payment, serves content
+```
+PRIVATE_KEY=your_64_character_hex_private_key_here
+CHAIN=main
+STORAGE_URL=https://store-us-1.bsvb.tech
+```
 
-## Setup
+`PRIVATE_KEY` is the only required variable. Generate one with:
 
-1. Copy `.env.example` to `.env`
-2. Add `PRIVATE_KEY=your_private_key_here`
-3. `npm install`
-4. `npm run dev`
+```sh
+openssl rand -hex 32
+```
 
-## Tech Stack
-- TypeScript
-- Express
-- BSV SDK & Wallet Toolbox
-- Testnet by default
+### 2. Start the service
 
-See `src/` for implementation details.
+```sh
+docker compose up -d
+```
+
+The site is now running at [http://localhost:3000](http://localhost:3000).
+
+### 3. View logs
+
+```sh
+docker compose logs -f article
+```
+
+### 4. Stop
+
+```sh
+docker compose down
+```
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `PRIVATE_KEY` | Yes | - | Hex-encoded BSV private key for receiving payments |
+| `CHAIN` | No | `main` | Network: `main` or `test` |
+| `STORAGE_URL` | No | `https://store-us-1.bsvb.tech` | Wallet storage provider |
+
+## How It Works
+
+- `GET /` -- Article index (free)
+- `GET /articles/:slug` -- Protected article content
+  - No payment headers: returns `402` with `x-bsv-sats` and `x-bsv-server`
+  - Valid BRC-29 payment headers: validates the transaction, internalizes payment, serves content
+
+Articles are priced in satoshis. A BSV-capable browser or client sends payment headers to access content.
+
+## Local Development
+
+```sh
+npm install
+cp .env.example .env   # then set PRIVATE_KEY
+npm run dev             # runs with tsx
+```
+
+## Production Deployment
+
+See [docs/deployment.md](docs/deployment.md) for the full deployment guide, including reverse proxy setup and CI/CD details.
+
+## CI/CD
+
+Pushing to `main` or tagging `v*` triggers the GitHub Actions workflow which builds and publishes the Docker image to `ghcr.io/sirdeggen/article`.

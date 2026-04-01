@@ -1,0 +1,14 @@
+services:
+  article:
+    build: .
+    # Or use the published image:
+    # image: ghcr.io/sirdeggen/article:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - CHAIN=${CHAIN:-main}
+      - STORAGE_URL=${STORAGE_URL:-https://store-us-1.bsvb.tech}
+    env_file:
+      - .env
+    restart: unless-stopped
