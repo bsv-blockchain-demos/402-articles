@@ -71,20 +71,28 @@ export function createBsvPaymentMiddleware() {
       // Has payment headers - STRICT validation (all 5 headers required)
       const sender = req.headers[`${PAYMENT_HEADER_PREFIX}sender`] as string
       const beef = req.headers[`${PAYMENT_HEADER_PREFIX}beef`] as string
-      const prefix = req.headers[`${PAYMENT_HEADER_PREFIX}prefix`] as string
-      const suffix = req.headers[`${PAYMENT_HEADER_PREFIX}suffix`] as string
+      const nonce = req.headers[`${PAYMENT_HEADER_PREFIX}nonce`] as string
+      const time = req.headers[`${PAYMENT_HEADER_PREFIX}time`] as string
       const vout = req.headers[`${PAYMENT_HEADER_PREFIX}vout`] as string
 
-      if (!sender || !beef || !prefix || !suffix || !vout) {
+      if (!sender || !beef || !nonce || !time || !vout) {
         console.warn('Missing required payment headers, returning 402')
         return send402(res)
+      }
+
+      // Validate time is a recent timestamp (within 30 seconds)
+      const PAYMENT_WINDOW_MS = 30_000
+      const paymentTimestamp = Number(time)
+      if (isNaN(paymentTimestamp) || Math.abs(Date.now() - paymentTimestamp) > PAYMENT_WINDOW_MS) {
+        console.warn('Payment timestamp out of range:', time)
+        return send402(res, price)
       }
 
       console.log('Payment headers present, validating...', {
         sender,
         beef: beef.substring(0, 50) + '...',
-        prefix,
-        suffix,
+        nonce,
+        time,
         vout
       })
 
@@ -93,22 +101,28 @@ export function createBsvPaymentMiddleware() {
       console.log(beefObj.toLogString())
       
       // Internalize the payment transaction
-      await wallet.internalizeAction({
+      const result = await wallet.internalizeAction({
         tx: beefArr,
         outputs: [{
           outputIndex: Number.parseInt(vout),
           protocol: 'wallet payment',
           paymentRemittance: {
-            derivationPrefix: prefix,
-            derivationSuffix: suffix,
+            derivationPrefix: nonce,
+            derivationSuffix: Buffer.from(time).toString('base64'),
             senderIdentityKey: sender
           }
         }],
         description: `Payment for ${req.path}`
-      })
+      }) as { accepted: boolean; isMerge?: boolean }
+
+      // Reject replayed transactions
+      if (result.isMerge) {
+        console.warn('Replayed transaction rejected for:', req.path)
+        return send402(res, price)
+      }
 
       console.log(`Payment accepted for ${req.path} from ${sender}`)
-      req.payment = { accepted: true, satoshisPaid: 100 }
+      req.payment = { accepted: true, satoshisPaid: price }
       
       next()
     } catch (error) {

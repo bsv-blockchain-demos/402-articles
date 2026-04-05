@@ -18,15 +18,15 @@ export function create402Fetcher(wallet: WalletInterface) {
     const server = res.headers.get(`${PAYMENT_HEADER_PREFIX}server`)
     if (!sats || !server) return res
     const { publicKey } = await wallet.getPublicKey({ identityKey: true })
-    const prefix = 'cGF5bWVudC1wcmVmaXg='
-    const suffix = 'c3VmZml4'
+    const nonce = 'cGF5bWVudC1wcmVmaXg='
+    const time = String(Date.now())
     const beefB64 = 'beefdata'
     const vout = '0'
     const newHeaders = {
       [`${PAYMENT_HEADER_PREFIX}beef`]: beefB64,
       [`${PAYMENT_HEADER_PREFIX}sender`]: publicKey,
-      [`${PAYMENT_HEADER_PREFIX}prefix`]: prefix,
-      [`${PAYMENT_HEADER_PREFIX}suffix`]: suffix,
+      [`${PAYMENT_HEADER_PREFIX}nonce`]: nonce,
+      [`${PAYMENT_HEADER_PREFIX}time`]: time,
       [`${PAYMENT_HEADER_PREFIX}vout`]: vout
     }
     const paidRes = await fetch(url, {
