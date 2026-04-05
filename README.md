@@ -57,9 +57,42 @@ docker compose down
 - `GET /` -- Article index (free)
 - `GET /articles/:slug` -- Protected article content
   - No payment headers: returns `402` with `x-bsv-sats` and `x-bsv-server`
-  - Valid BRC-29 payment headers: validates the transaction, internalizes payment, serves content
+  - Valid payment headers: validates the transaction, internalizes payment, serves content
 
-Articles are priced in satoshis. A BSV-capable browser or client sends payment headers to access content.
+Payment handling is powered by [`@bsv/402-pay`](https://www.npmjs.com/package/@bsv/402-pay).
+
+### Payment Header Protocol
+
+| Header | Direction | Description |
+|---|---|---|
+| `x-bsv-sats` | Server → Client | Required satoshi amount |
+| `x-bsv-server` | Server → Client | Server identity public key |
+| `x-bsv-beef` | Client → Server | Base64-encoded BEEF transaction |
+| `x-bsv-sender` | Client → Server | Client identity public key |
+| `x-bsv-nonce` | Client → Server | Random base64 derivation prefix |
+| `x-bsv-time` | Client → Server | Unix ms timestamp (freshness, 30s window) |
+| `x-bsv-vout` | Client → Server | Output index (decimal string) |
+
+### Using `@bsv/402-pay` in your own server
+
+```ts
+import { createPaymentMiddleware } from '@bsv/402-pay/server'
+
+app.get('/articles/:slug', createPaymentMiddleware({
+  wallet,
+  calculatePrice: (path) => getArticle(path.replace('/articles/', ''))?.price ?? 100
+}), handler)
+```
+
+### Using `@bsv/402-pay` in your own client
+
+```ts
+import { create402Fetch } from '@bsv/402-pay/client'
+
+const fetch402 = create402Fetch({ wallet })
+const res = await fetch402('https://example.com/articles/foo')
+const html = await res.text()
+```
 
 ## Local Development
 
