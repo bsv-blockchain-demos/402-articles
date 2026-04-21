@@ -1,6 +1,6 @@
 {
   "name": "article",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Substack-like article reader with BSV 402 payment middleware",
   "main": "dist/server.js",
   "type": "module",
