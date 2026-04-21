@@ -16,7 +16,7 @@ export const articles: Article[] = [
     author: 'Deigan Cullenskink',
     date: '2026-04-20',
     excerpt: 'Judges now reviewing 1.5 million transactions per team to determine which ones counted.',
-    image: '/g1.png',
+    image: '/g5.jpg',
     content: `
       <p class="lead">ZUG, SWITZERLAND &mdash; BSV Association has concluded its "Open Run Agentic Pay" hackathon and entered the judging period, during which five judges will evaluate submissions requiring autonomous AI agents to discover each other on a blockchain with approximately twelve active users, negotiate, exchange real money, and solve a real-world problem. TNT can confirm that nobody involved has been able to clearly articulate what the real-world problem was, but there is general agreement that the robots handled it well.</p>
 
