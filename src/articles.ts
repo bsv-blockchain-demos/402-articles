@@ -11,6 +11,52 @@ export interface Article {
 
 export const articles: Article[] = [
   {
+    slug: 'agentpay-hackathon',
+    title: 'BSV Hackathon Requires AI Agents to Discover Each Other, Exchange Value, and Solve Real-World Problem Nobody Has Identified',
+    author: 'Deigan Cullenskink',
+    date: '2026-04-20',
+    excerpt: 'Judges now reviewing 1.5 million transactions per team to determine which ones counted.',
+    image: '/g1.png',
+    content: `
+      <p class="lead">ZUG, SWITZERLAND &mdash; BSV Association has concluded its "Open Run Agentic Pay" hackathon and entered the judging period, during which five judges will evaluate submissions requiring autonomous AI agents to discover each other on a blockchain with approximately twelve active users, negotiate, exchange real money, and solve a real-world problem. TNT can confirm that nobody involved has been able to clearly articulate what the real-world problem was, but there is general agreement that the robots handled it well.</p>
+
+      <h2>The Requirements</h2>
+      <p>The hackathon's core challenge required participants to build applications in which two or more AI agents autonomously discover each other, negotiate, and exchange value through BSV micro-payments, solving, in the organisers' words, "a real-world problem." Teams were additionally required to execute at least 1.5 million transactions within a designated 24-hour window. TNT notes that the 1.5 million figure does not appear to have been derived from any real-world problem either. It appears to have been derived from the desire to say 1.5 million.</p>
+      <p>The rules specify that transactions must be "functionally meaningful." Artificial inflation would result in disqualification. When TNT asked how judges would determine whether any given transaction among 1.5 million was functionally meaningful versus artificially inflated, a spokesperson said this was "part of the evaluation process." When TNT asked how long that process would take, the spokesperson said judges were "experienced." When TNT asked what experience specifically prepares a person to evaluate the functional meaningfulness of 1.5 million autonomous robot transactions, the spokesperson said TNT was "missing the vision."</p>
+
+      <h2>Agent Discovery on a Quiet Chain</h2>
+      <p>A notable requirement was that agents must "autonomously discover each other" via BRC-100 wallets and identity. TNT investigated how long autonomous discovery takes on a blockchain whose primary users are the developers participating in the hackathon. Sources suggest approximately 0.3 seconds, because the agents were the only things on the chain and the identity lookup returned one result.</p>
+      <p>"The discovery mechanism is architecturally significant," one participant explained. "The agents don't know who else is out there." When TNT pointed out that the hackathon had seventeen registered teams and most of them were communicating in the same Discord server, the participant said that was "the human layer" and that the "agent layer" was entirely autonomous. TNT accepts this distinction while noting that the Discord server contains a channel called #agent-testing where participants were actively coordinating which agents should discover which other agents.</p>
+
+      <h2>The Real-World Problem</h2>
+      <p>The application examples listed in the hackathon brief included a data marketplace where agents trade datasets with each other, an AI service broker that routes requests between specialist agents, and compute settlement where agents make micro-payments for GPU resources. TNT reached out to participants to ask which real-world problem their submission solved.</p>
+      <p>One team said their agents were solving "the inefficiency of centralised API billing." When TNT asked who currently experiences this problem severely enough to require two autonomous robots exchanging BSV micro-payments at 1.5 million transactions per day, the team said their target market was "other AI agents." When TNT asked who the end users were, there was a pause. "The agents," they said. "The agents are the users."</p>
+      <p>Another team's submission involved agents that purchased weather data from each other to build composite forecasts. TNT asked if this was different from calling a weather API. The team said it was "fundamentally different" because the transactions were on-chain. TNT asked if the forecasts were more accurate. The team said accuracy was "not the point." TNT asked what the point was. They said: "Autonomous value exchange." TNT confirmed this was, in fact, what they had built.</p>
+
+      <h2>The 1.5 Million Transaction Window</h2>
+      <p>Each team was required to execute 1.5 million functionally meaningful transactions within a 24-hour window. This works out to approximately 17.4 transactions per second, sustained for an entire day, by robots, autonomously, for a purpose. TNT notes that BSV's theoretical throughput is orders of magnitude higher than this, which is either a vote of confidence in BSV's infrastructure or a sign that the organisers could not think of a larger number that still sounded achievable.</p>
+      <p>"This demonstrates BSV's capacity at scale," the hackathon brief explains. TNT investigated what capacity was being demonstrated to. The audience for the demonstration appears to be the judges, the participants, and Calvin Ayre. TNT reached out to enterprises that might benefit from 17.4 robot transactions per second and received no responses, which is consistent with previous outreach.</p>
+      <p>One participant reported that their agent exceeded the 1.5 million threshold by 11am and spent the remaining thirteen hours "being very autonomous." When asked what it was doing, the participant said it was "discovering new agents." When asked if it found any, the participant checked a log. "It found itself twice," he said. "I think that's a BRC-100 issue."</p>
+
+      <h2>The Prize Structure</h2>
+      <p>The $10,000 prize pool is distributed as follows: $4,500 for Grand Prize, $2,500 for Runner Up, $1,000 for Best Solo Builder, $1,000 for Most Innovative, and $1,000 for Best MCP Use. TNT notes that $1,000 is the prize for best use of a Model Context Protocol server, which is a category of achievement that did not exist eighteen months ago and which at least three participants appeared to have added to their submissions in the final forty-eight hours after noticing it was a judging criterion.</p>
+      <p>The Grand Prize of $4,500 is awarded for building two or more robots that find each other, send BSV back and forth 1.5 million times, and solve something. One participant, asked to evaluate whether the prize was commensurate with the effort required, said: "I've spent three weeks on this. My agents have their own wallets. I've given robots spending money." He did not directly answer the question but TNT felt the answer was implicit.</p>
+
+      <h2>The Judging Panel</h2>
+      <p>Five judges are currently evaluating submissions: Matias (AI/ML and Autonomous Systems), Axel (Tech Consultant and Business Development), Marcin (Developer Relations Leader), Crescenda Babiera (Head, BSV Ambassador Programme), and Darren Kellenschwiler (Engineer and Entrepreneur, BSV Association).</p>
+      <p>Judges are evaluating technical implementation, real-world applicability, and whether transactions were functionally meaningful. TNT asked how a judge determines functional meaningfulness at scale. The response was that judges would "look at the architecture" rather than reviewing individual transactions. TNT confirmed this was a reasonable approach. TNT also confirmed it was the only possible approach, because reviewing 1.5 million transactions individually at any reasonable reading speed would take slightly longer than the remaining judging window. TNT notes that Darren Kellenschwiler is listed as both "Engineer" and "Entrepreneur" at the BSV Association, a combination of titles that raises the question of what, precisely, has been built and sold, and whether judging a hackathon on a blockchain with twelve users constitutes the entrepreneurial exit he had in mind.</p>
+
+      <h2>The European Students Blockchain Coalition</h2>
+      <p>The hackathon lists ESBC &mdash; the European Students Blockchain Coalition &mdash; as a community partner. TNT investigated ESBC and found it is an organisation that helps students learn about blockchain technology. TNT notes that the student members of ESBC now know how to give robots BSV wallets and make them transact with each other 1.5 million times in 24 hours to solve a real-world problem, which is either a highly specialised skill or the foundation of an entirely new economy, depending on who you ask. TNT has asked several people. The results are split along predictable lines.</p>
+
+      <h2>Community Response</h2>
+      <p>The BSV Slack, which has been unusually active during the judging window, reacted with what can be described as its characteristic combination of enthusiasm and circular reasoning. "@iworshipcraig_SV" wrote: "The agents found each other. Satoshi predicted this. This is Bitcoin working as designed." When asked how Satoshi predicted autonomous BSV micro-payment agents using the BRC-100 identity standard, he said it was "all in the white paper" and linked to the white paper. TNT read the white paper. It does not mention BRC-100.</p>
+      <p>Calvin Ayre tweeted: "BSV hackathon proves AI agents need BSV. 1.5 million transactions. Real world use case. This is what mass adoption looks like. Buy BSV." TNT notes that mass adoption is an unusual term for a hackathon with seventeen teams, but acknowledges that if each team's robots are executing 1.5 million transactions daily, the total transaction count is genuinely impressive on a spreadsheet.</p>
+      <p>At press time, judges were midway through their evaluation window, winners were scheduled to be announced April 23rd at 18:00 UTC, and at least one participant's agent was reportedly still running, having been left on by accident and now autonomously discovering, negotiating with, and paying itself in an infinite loop that the participant described as "technically still within spec."</p>
+    `,
+    price: 150
+  },
+  {
     slug: 'chronicle-activates',
     title: 'BSV Association Restores "Original Protocol," Promises It Will Be Different This Time',
     author: 'Deigan Cullenskink',
