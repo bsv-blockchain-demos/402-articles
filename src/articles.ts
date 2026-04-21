@@ -16,7 +16,7 @@ export const articles: Article[] = [
     author: 'Deigan Cullenskink',
     date: '2026-04-20',
     excerpt: 'Judges now reviewing 1.5 million transactions per team to determine which ones counted.',
-    image: '/g5.png',
+    image: '/images/g5.png',
     content: `
       <p class="lead">ZUG, SWITZERLAND &mdash; BSV Association has concluded its "Open Run Agentic Pay" hackathon and entered the judging period, during which five judges will evaluate submissions requiring autonomous AI agents to discover each other on a blockchain with approximately twelve active users, negotiate, exchange real money, and solve a real-world problem. TNT can confirm that nobody involved has been able to clearly articulate what the real-world problem was, but there is general agreement that the robots handled it well.</p>
 
@@ -63,7 +63,7 @@ export const articles: Article[] = [
     author: 'Deigan Cullenskink',
     date: '2026-04-07',
     excerpt: 'Man who has been in BSV "since day one" celebrates restoration of opcodes nobody asked for.',
-    image: '/g4.png',
+    image: '/images/g4.png',
     content: `
       <p class="lead">ZUG, SWITZERLAND &mdash; Connor Murray, BSV Association representative and self-described day-one BSV supporter, has announced that the "Chronicle" upgrade will activate on April 7th, restoring the "original Bitcoin protocol" by re-enabling several opcodes that were disabled years ago because they were dangerous and that are being re-enabled now because they are, apparently, no longer dangerous. TNT can confirm that no one has satisfactorily explained what changed.</p>
 
@@ -118,7 +118,7 @@ export const articles: Article[] = [
     author: 'Deigan Cullenskink',
     date: '2026-03-14',
     excerpt: 'Groundbreaking developer tool achieves perfect 1:1 language-to-user ratio.',
-    image: '/g2.png',
+    image: '/images/g2.png',
     content: `
       <p class="lead">REYKJAVIK &mdash; Siggi Oskarsson, the mass-producing developer behind the Run&aacute;r smart contract compiler, has released an online playground at runar.run that lets developers write Bitcoin smart contracts in eight different programming languages entirely in the browser. TNT can exclusively report that one developer has tried it in each language, bringing the total user base to what sources describe as "a statistically significant sample of the BSV developer community."</p>
 
@@ -157,7 +157,7 @@ export const articles: Article[] = [
     author: 'Deigan Cullenskink',
     date: '2026-03-25',
     excerpt: 'Bitcoin Historian uncovers what everyone already knew, adds footnotes.',
-    image: '/g3.png',
+    image: '/images/g3.png',
     content: `
       <p class="lead">FLORIDA &mdash; CoinGeek Chief Bitcoin Historian, GorillaPool founder, bOpen founder, Open Protocol Labs founder, podcast host, BJJ black belt, and self-described "world's foremost Bitcoin Historian" Kurt Wuckert Jr has published a 9,000-word investigative article revealing that Tether, the company that has been publicly accused of fraud since 2017, is in fact fraudulent. TNT can confirm that this is the longest "I told you so" in the history of cryptocurrency journalism, despite the fact that Kurt did not, at any point, previously tell anyone so.</p>
 
