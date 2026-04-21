@@ -12,6 +12,6 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist/ ./dist/
-COPY g1.png g2.png g3.png g4.png ./
+COPY g1.png g2.png g3.png g4.png g5.png ./
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
