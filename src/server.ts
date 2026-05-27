@@ -3,6 +3,7 @@ import path from 'path'
 import cors from 'cors'
 import { createBsvPaymentMiddleware, getServerIdentityKey } from './middleware/payment.js'
 import { getAllArticles, getArticle, Article } from './articles.js'
+import { doublePageHtml } from './double.js'
 
 const app = express()
 const PORT = 3000
@@ -91,6 +92,28 @@ app.get('/', (req, res) => {
   const articles = getAllArticles()
   const cards = articles.map(a => articleCard(a)).join('')
   res.send(pageShell('The NOW\u2122 Times', cards))
+})
+
+app.get('/double', (_req, res) => {
+  res.send(doublePageHtml())
+})
+
+app.post('/double/proxy', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+  const url = req.query.url
+  if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) {
+    return res.status(400).json({ error: 'invalid url' })
+  }
+  try {
+    const upstream = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: req.body
+    })
+    const text = await upstream.text()
+    res.status(upstream.status).type('text/plain').send(text)
+  } catch (e) {
+    res.status(502).json({ error: String(e) })
+  }
 })
 
 app.get('/.well-known/bsv-identity', (req, res) => {
