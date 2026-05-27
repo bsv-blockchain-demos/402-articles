@@ -32,6 +32,17 @@ export function doublePageHtml() {
     .status.err{background:#3a1e1e;color:#ff8888}
     .status.idle{background:#252525;color:var(--muted)}
     .log{margin-top:8px;font-family:ui-monospace,monospace;font-size:0.72rem;white-space:pre-wrap;word-break:break-all;color:#999;max-height:160px;overflow:auto}
+    .pending{margin-top:24px}
+    .pending h2{font-size:1rem;margin-bottom:10px;letter-spacing:-0.01em}
+    .pending-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#222;border:1px solid var(--border);border-radius:4px;margin-bottom:6px;font-family:ui-monospace,monospace;font-size:0.75rem}
+    .pending-row .txid{flex:1;word-break:break-all;color:#ccc}
+    .pending-row .net-tag{padding:2px 8px;border-radius:999px;background:#2a2a28;color:var(--muted);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em}
+    .pending-row .st{padding:2px 8px;border-radius:999px;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em}
+    .pending-row .st.pending{background:#3a2f1e;color:#e0b060}
+    .pending-row .st.signed{background:#1e3a1e;color:#7fcf7f}
+    .pending-row .st.superseded{background:#2a2a28;color:#888}
+    .pending-row .st.error{background:#3a1e1e;color:#ff8888}
+    .pending-empty{font-size:0.78rem;color:var(--muted)}
     @media (max-width:640px){.results{grid-template-columns:1fr}}
   </style>
 </head>
@@ -46,6 +57,11 @@ export function doublePageHtml() {
   <div class="row"><label>Endpoint B</label><input id="urlB" type="text" placeholder="https://node-b.example/api/v1/tx" /></div>
 
   <button id="run">Create &amp; broadcast double-spend</button>
+
+  <section class="pending">
+    <h2>Pending lookups</h2>
+    <div id="pending"><div class="pending-empty">none</div></div>
+  </section>
 
   <div class="results">
     <div class="panel">
@@ -73,8 +89,11 @@ export function doublePageHtml() {
 
     const LS_KEY_A = 'teranode.endpointA'
     const LS_KEY_B = 'teranode.endpointB'
+    const LS_KEY_PENDING = 'teranode.pendingTxids'
+    const POLL_INTERVAL_MS = 15000
 
     const wallet = new WalletClient()
+    let walletNetwork = 'mainnet'
 
     function hex(bytes){ return [...bytes].map(b => b.toString(16).padStart(2,'0')).join('') }
 
@@ -109,11 +128,96 @@ export function doublePageHtml() {
       const label = document.getElementById('netLabel')
       try {
         const { network } = await wallet.getNetwork({})
+        walletNetwork = network
         label.textContent = network
         badge.classList.add(network === 'mainnet' ? 'main' : 'test')
       } catch (e){
         label.textContent = 'no wallet'
         console.error(e)
+      }
+    }
+
+    function loadPending(){
+      try { return JSON.parse(localStorage.getItem(LS_KEY_PENDING) || '[]') } catch { return [] }
+    }
+    function savePending(list){ localStorage.setItem(LS_KEY_PENDING, JSON.stringify(list)) }
+    function addPending(txid, network, reference, unlockHex){
+      const list = loadPending()
+      if (list.find(e => e.txid === txid)) return
+      list.push({ txid, network, reference, unlockHex, addedAt: Date.now(), status: 'pending' })
+      savePending(list)
+      renderPending()
+    }
+    function updatePending(txid, patch){
+      const list = loadPending()
+      const i = list.findIndex(e => e.txid === txid)
+      if (i < 0) return
+      list[i] = { ...list[i], ...patch }
+      savePending(list)
+      renderPending()
+    }
+
+    function renderPending(){
+      const el = document.getElementById('pending')
+      const list = loadPending()
+      if (!list.length){ el.innerHTML = '<div class="pending-empty">none</div>'; return }
+      el.innerHTML = list.map(e => {
+        const safeTxid = (e.txid || '').replace(/[^a-f0-9]/gi, '')
+        const safeNet = (e.network || '').replace(/[^a-z]/gi, '')
+        const safeStatus = (e.status || 'pending').replace(/[^a-z]/gi, '')
+        return '<div class="pending-row">' +
+          '<span class="txid">' + safeTxid + '</span>' +
+          '<span class="net-tag">' + safeNet + '</span>' +
+          '<span class="st ' + safeStatus + '">' + safeStatus + '</span>' +
+          '</div>'
+      }).join('')
+    }
+
+    function hexToBytes(hex){
+      const out = []
+      for (let i = 0; i < hex.length; i += 2) out.push(parseInt(hex.slice(i, i+2), 16))
+      return out
+    }
+
+    async function fetchWocBeef(txid, network){
+      const seg = network === 'mainnet' ? 'main' : 'test'
+      const url = 'https://api.whatsonchain.com/v1/bsv/' + seg + '/tx/' + txid + '/beef'
+      const res = await fetch(url)
+      if (res.status === 404) return null
+      if (!res.ok) throw new Error('woc ' + res.status)
+      const body = (await res.text()).trim()
+      if (!body || /not[- ]?found/i.test(body)) return null
+      return body.replace(/^"|"$/g, '')
+    }
+
+    async function pollPending(){
+      const list = loadPending()
+      const settledRefs = new Set(list.filter(e => e.status === 'signed').map(e => e.reference))
+      for (const entry of list){
+        if (entry.status === 'signed' || entry.status === 'superseded') continue
+        if (settledRefs.has(entry.reference)){
+          updatePending(entry.txid, { status: 'superseded' })
+          continue
+        }
+        try {
+          const hex = await fetchWocBeef(entry.txid, entry.network)
+          if (!hex) continue
+          await wallet.signAction({
+            reference: entry.reference,
+            spends: { 0: { unlockingScript: entry.unlockHex } },
+            options: { noSend: false, acceptDelayedBroadcast: true }
+          })
+          updatePending(entry.txid, { status: 'signed' })
+          settledRefs.add(entry.reference)
+          for (const other of loadPending()){
+            if (other.reference === entry.reference && other.txid !== entry.txid && other.status !== 'signed'){
+              updatePending(other.txid, { status: 'superseded' })
+            }
+          }
+        } catch (e){
+          console.error('poll error', entry.txid, e)
+          updatePending(entry.txid, { status: 'error' })
+        }
       }
     }
 
@@ -151,13 +255,23 @@ export function doublePageHtml() {
           }],
           options: {
             noSend: true,
-            randomizeOutputs: false
+            randomizeOutputs: false,
+            signAndProcess: false
           }
         })
 
-        if (!action.tx) throw new Error('createAction returned no tx (got signableTransaction?)')
+        const signable = action.signableTransaction
+        if (!signable) throw new Error('createAction did not return a signableTransaction')
+        const reference = signable.reference
 
-        const orig = Transaction.fromAtomicBEEF(action.tx)
+        const initialSign = await wallet.signAction({
+          reference,
+          spends: {},
+          options: { noSend: true, acceptDelayedBroadcast: true }
+        })
+        if (!initialSign.tx) throw new Error('initial signAction returned no tx')
+
+        const orig = Transaction.fromAtomicBEEF(initialSign.tx)
         const origInput = orig.inputs[0]
         const origUnlock = origInput.unlockingScript
 
@@ -214,6 +328,11 @@ export function doublePageHtml() {
         document.getElementById('unlockA').textContent = tx1.inputs[0].unlockingScript.toHex()
         document.getElementById('unlockB').textContent = tx2.inputs[0].unlockingScript.toHex()
 
+        const unlockHexA = modifiedScriptA.toHex()
+        const unlockHexB = modifiedScriptB.toHex()
+        addPending(txid1, walletNetwork, reference, unlockHexA)
+        addPending(txid2, walletNetwork, reference, unlockHexB)
+
         if (txid1 === txid2) throw new Error('malleation produced identical txid')
 
         const rawA = new Uint8Array(tx1.toBinary())
@@ -240,7 +359,8 @@ export function doublePageHtml() {
     loadEndpoints()
     bindPersist('urlA', LS_KEY_A)
     bindPersist('urlB', LS_KEY_B)
-    loadNetwork()
+    renderPending()
+    loadNetwork().then(() => { pollPending(); setInterval(pollPending, POLL_INTERVAL_MS) })
     document.getElementById('run').addEventListener('click', run)
   </script>
 </body>

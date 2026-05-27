@@ -18,9 +18,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@bsv/402-pay": "^0.1.1",
-    "@bsv/sdk": "^2.0.13",
-    "@bsv/wallet-toolbox": "^2.1.9",
+    "@bsv/402-pay": "^0.1.4",
+    "@bsv/sdk": "^2.1.4",
+    "@bsv/wallet-toolbox": "^2.1.28",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2"
