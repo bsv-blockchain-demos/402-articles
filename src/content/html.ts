@@ -1,7 +1,7 @@
 import sanitizeHtml from 'sanitize-html'
 
 const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
-  allowedTags: ['p', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'ul', 'ol', 'li', 'em', 'strong', 'a', 'code', 'pre', 'br', 'hr'],
+  allowedTags: ['p', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'ul', 'ol', 'li', 'em', 'strong', 'i', 'a', 'code', 'pre', 'br', 'hr', 'sup', 'sub'],
   allowedAttributes: {
     a: ['href', 'title', 'rel'],
     p: ['class']

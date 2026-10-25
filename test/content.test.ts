@@ -92,23 +92,38 @@ describe('sanitizer', () => {
   })
 })
 
+const ORIGINAL_ARTICLES = [
+  'agentpay-hackathon',
+  'chronicle-activates',
+  'tetheral-reserve-bank',
+  'runar-playground'
+] as const
+
 describe('bundled articles', () => {
   it('migrates the four articles losslessly, newest first', async () => {
     const store = new ContentStore({ dir: bundledContentDir(), source: 'local', pollMs: 0, logger: silent })
     await store.loadInitial()
     const listed = store.getAllArticles()
-    assert.deepEqual(listed.map(article => article.slug), [
-      'agentpay-hackathon',
-      'chronicle-activates',
-      'tetheral-reserve-bank',
-      'runar-playground'
+    const original = ORIGINAL_ARTICLES.map(slug => {
+      const article = listed.find(item => item.slug === slug)
+      assert.ok(article, slug)
+      return article
+    })
+    const originalSlugs = new Set<string>(ORIGINAL_ARTICLES)
+    assert.deepEqual(
+      listed.map(article => article.slug).filter(slug => originalSlugs.has(slug)),
+      [...ORIGINAL_ARTICLES]
+    )
+    const sorted = [...listed].sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug))
+    assert.deepEqual(listed.map(article => article.slug), sorted.map(article => article.slug))
+    assert.deepEqual(original.map(article => article.price), [150, 100, 200, 75])
+    assert.deepEqual(original.map(article => article.image), [
+      '/images/g5.png',
+      '/images/g4.png',
+      '/images/g3.png',
+      '/images/g2.png'
     ])
-    assert.deepEqual(listed.map(article => article.price), [150, 100, 200, 75])
-    assert.equal(listed[0].image, '/images/g5.png')
-    assert.equal(listed[1].image, '/images/g4.png')
-    assert.equal(listed[2].image, '/images/g3.png')
-    assert.equal(listed[3].image, '/images/g2.png')
-    assert.equal(listed.every(article => article.author === 'Deigan Cullenskink'), true)
+    assert.equal(original.every(article => article.author === 'Deigan Cullenskink'), true)
 
     const agentpay = store.getArticle('agentpay-hackathon')
     assert.ok(agentpay)
@@ -125,6 +140,35 @@ describe('bundled articles', () => {
     assert.match(tetheral!.content, /Keyser Söze/)
     assert.equal(store.getImage('g5.png')?.contentType, 'image/png')
     assert.equal(store.getImage('g2.png')?.contentType, 'image/jpeg')
+  })
+})
+
+describe('brc week one', () => {
+  it('keeps the column text, links, superscript, and price', async () => {
+    const store = new ContentStore({ dir: bundledContentDir(), source: 'local', pollMs: 0, logger: silent })
+    await store.loadInitial()
+    const article = store.getArticle('brc-week-1chickennugget')
+    assert.ok(article)
+    assert.equal(article.title, 'Standards Body Merges 21 Proposals in a Week, Including Proposal to Make Free Indexing Exclusive to Addresses Beginning "1ChickenNugget"')
+    assert.equal(article.excerpt, 'Tokens also receive six purity tests, four baskets, and a four-minute proof that nobody is allowed to use yet.')
+    assert.equal(article.author, 'Deigan Cullenskink')
+    assert.equal(article.date, '2026-10-27')
+    assert.equal(article.price, 150)
+    assert.equal(article.image, '/images/brc-week-1chickennugget.jpg')
+    assert.match(article.content, /<p class="lead">THE BRC REPOSITORY/)
+    assert.match(article.content, /<h2>The Nugget Schedule<\/h2>/)
+    assert.match(article.content, /<h2>The Sentence of the Week<\/h2>/)
+    assert.match(article.content, /<sup>22<\/sup>/)
+    assert.match(article.content, /<i>m<\/i>/)
+    assert.match(article.content, /href="https:\/\/brc.dev\/234"/)
+    assert.match(article.content, /href="https:\/\/x.com\/ProjectBabbage\/status\/2112712320518701264"/)
+    assert.equal((article.content.match(/<a /g) || []).length, 37)
+    assert.equal(/<script/i.test(article.content), false)
+    const image = store.getImage('brc-week-1chickennugget.jpg')
+    assert.equal(image?.contentType, 'image/jpeg')
+    assert.ok(image && image.body.length > 1000)
+    const listed = store.getAllArticles().map(item => item.slug)
+    assert.ok(listed.indexOf('brc-week-1chickennugget') < listed.indexOf('agentpay-hackathon'))
   })
 })
 
