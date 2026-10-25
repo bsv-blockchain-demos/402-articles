@@ -10,16 +10,24 @@
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `PRIVATE_KEY` | Yes | - | Hex-encoded BSV private key for the server wallet. Used to receive and validate payments. |
-| `CHAIN` | No | `main` | BSV network: `main` for mainnet, `test` for testnet. |
+| `CHAIN` | No | `main` in Compose | BSV network: `main` for mainnet, `test` for testnet. The code itself defaults to `test` when the variable is unset. |
 | `STORAGE_URL` | No | `https://store-us-1.bsvb.tech` | Wallet storage provider URL. |
+| `CONTENT_REPO` | No | `bsv-blockchain-demos/402-articles` | GitHub `owner/repo` polled for articles. |
+| `CONTENT_BRANCH` | No | `main` | Branch polled for articles. |
+| `CONTENT_PATH` | No | `content` | Directory of Markdown articles and `images/` inside the repo. |
+| `CONTENT_POLL_MS` | No | `180000` | Poll interval. `0` disables polling. |
+| `CONTENT_SOURCE` | No | `github` | `github` or `local`. |
+| `CONTENT_GITHUB_TOKEN` | No | | Optional GitHub token. Recommended if more than one replica polls. |
+| `CONTENT_REFRESH_TOKEN` | No | | Enables `POST /content/refresh`. Treat as a secret. |
+| `DOUBLE_PROXY_ALLOW_HOSTS` | No | empty | HTTPS hosts allowed to receive `/double` broadcasts. Empty disables the proxy. |
 
 ## Quick Start
 
 1. Clone the repository:
 
 ```sh
-git clone https://github.com/sirdeggen/article.git
-cd article
+git clone https://github.com/bsv-blockchain-demos/402-articles.git
+cd 402-articles
 ```
 
 2. Create a `.env` file with your private key:
@@ -53,13 +61,13 @@ Instead of building locally, you can pull the pre-built image from GitHub Contai
 
 ```yaml
 # In docker-compose.yml, replace build: . with:
-image: ghcr.io/sirdeggen/article:latest
+image: ghcr.io/bsv-blockchain-demos/402-articles:latest
 ```
 
 Or pull directly:
 
 ```sh
-docker pull ghcr.io/sirdeggen/article:latest
+docker pull ghcr.io/bsv-blockchain-demos/402-articles:latest
 ```
 
 ## Building Locally
@@ -114,4 +122,6 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/
 
 ## CI/CD
 
-The GitHub Actions workflow at `.github/workflows/docker-publish.yml` automatically builds and pushes the Docker image to `ghcr.io/sirdeggen/article` on every push to `main`/`master` or when a version tag (`v*`) is created.
+The GitHub Actions workflow at `.github/workflows/docker-publish.yml` runs the tests, then builds and pushes the Docker image to `ghcr.io/bsv-blockchain-demos/402-articles` on every push to `main`/`master` or when a version tag (`v*`) is created.
+
+Publishing a new article does not require a new image once this build is deployed. Add `content/<slug>.md` and any `content/images/` file, then merge to the configured branch. The running server polls that branch. See the README for the front matter and the refresh route.

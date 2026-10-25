@@ -51,7 +51,7 @@ export function doublePageHtml() {
     <h1>Teranode Double-Spend Test</h1>
     <div class="net" id="netBadge"><span class="dot"></span><span id="netLabel">connecting...</span></div>
   </header>
-  <p class="lead">Builds one funded tx via BRC-100 wallet (<code>noSend:true</code>, single 0-sat OP_FALSE OP_RETURN output), then malleates input 0 signature (ECDSA s-flip) to produce a twin spending the same UTXO. Both broadcast to separate Teranode propagation endpoints.</p>
+  <p class="lead">Builds one funded tx via BRC-100 wallet (<code>noSend:true</code>, single 0-sat OP_FALSE OP_RETURN output), then malleates input 0 signature (ECDSA s-flip) to produce a twin spending the same UTXO. Both broadcast to separate Teranode propagation endpoints. The server forwards those broadcasts only to HTTPS hosts named in <code>DOUBLE_PROXY_ALLOW_HOSTS</code>.</p>
 
   <div class="row"><label>Endpoint A</label><input id="urlA" type="text" placeholder="https://node-a.example/api/v1/tx" /></div>
   <div class="row"><label>Endpoint B</label><input id="urlB" type="text" placeholder="https://node-b.example/api/v1/tx" /></div>
