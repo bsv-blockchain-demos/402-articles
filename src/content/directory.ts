@@ -2,8 +2,8 @@ import { lstat, readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { isArticleSlug, isContentImageName } from './parse.js'
 
-const MARKDOWN_MAX_BYTES = 512 * 1024
-const IMAGE_MAX_BYTES = 8 * 1024 * 1024
+export const MARKDOWN_MAX_BYTES = 512 * 1024
+export const IMAGE_MAX_BYTES = 8 * 1024 * 1024
 
 export interface DirectoryMarkdown {
   slug: string

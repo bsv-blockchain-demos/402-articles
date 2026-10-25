@@ -1,0 +1,3 @@
+# GitHub logins that may publish without a review.
+# One login per line. A pull request that edits this file is not content-only, so it still needs a review.
+sirdeggen

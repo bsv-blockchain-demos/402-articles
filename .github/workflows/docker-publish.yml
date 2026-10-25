@@ -12,8 +12,12 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # Auto-merge looks this job up by the name "test". It checks out pull-request
+  # code, so the token stays read-only and the job never merges.
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,8 +28,14 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Install and test
-        run: npm ci && npm test
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate articles
+        run: npm run validate-content
+
+      - name: Test
+        run: npm test
 
   build-and-push:
     needs: test

@@ -122,6 +122,6 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/
 
 ## CI/CD
 
-The GitHub Actions workflow at `.github/workflows/docker-publish.yml` runs the tests, then builds and pushes the Docker image to `ghcr.io/bsv-blockchain-demos/402-articles` on every push to `main`/`master` or when a version tag (`v*`) is created.
+The GitHub Actions workflow at `.github/workflows/docker-publish.yml` validates `content/*.md`, runs the tests, then builds and pushes the Docker image to `ghcr.io/bsv-blockchain-demos/402-articles` on every push to `main`/`master` or when a version tag (`v*`) is created. The test job is read-only.
 
-Publishing a new article does not require a new image once this build is deployed. Add `content/<slug>.md` and any `content/images/` file, then merge to the configured branch. The running server polls that branch. See the README for the front matter and the refresh route.
+Publishing a new article does not require a new image once this build is deployed. Open a pull request that only changes `content/<slug>.md` and `content/images/`. An allowlisted author, on a pull request that is not a draft, is merged by `.github/workflows/auto-merge-content.yml` after that test job passes. Anyone else's pull request, and any pull request that touches code, tests, or workflows, stays for review. The running server polls the configured branch. See the README for the front matter, the allowlist, and the refresh route.
