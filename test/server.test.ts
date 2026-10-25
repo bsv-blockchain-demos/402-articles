@@ -76,12 +76,14 @@ describe('article server', () => {
     assert.match(html, /The NOW/)
     assert.equal(html.includes('agentic psychosis'), false)
     assert.match(html, /Judges now reviewing 1.5 million transactions/)
-    assert.deepEqual([...html.matchAll(/\/articles\/([a-z0-9-]+)/g)].map(match => match[1]), [
+    const slugs = [...html.matchAll(/\/articles\/([a-z0-9-]+)/g)].map(match => match[1])
+    const original = [
       'agentpay-hackathon',
       'chronicle-activates',
       'tetheral-reserve-bank',
       'runar-playground'
-    ])
+    ]
+    assert.deepEqual(slugs.filter(slug => original.includes(slug)), original)
     const beforePay = await fetch(url + '/.well-known/bsv-identity')
     assert.equal((await beforePay.json()).identityKey, 'not-initialized')
 
@@ -98,6 +100,16 @@ describe('article server', () => {
       assert.equal(response.headers.get('x-bsv-server'), '02' + 'ab'.repeat(32))
       assert.equal(await response.text(), '')
     }
+    assert.ok(slugs.includes('brc-week-1chickennugget'))
+    assert.match(html, /src="\/images\/brc-week-1chickennugget\.jpg"/)
+    assert.equal(html.includes('THE BRC REPOSITORY'), false)
+    const column = await fetch(`${url}/articles/brc-week-1chickennugget`)
+    assert.equal(column.status, 402)
+    assert.equal(column.headers.get('x-bsv-sats'), '150')
+    assert.equal(await column.text(), '')
+    const header = await fetch(`${url}/images/brc-week-1chickennugget.jpg`)
+    assert.equal(header.status, 200)
+    assert.equal(header.headers.get('content-type'), 'image/jpeg')
     assert.equal(wallet.calls(), 1)
 
     const identity = await fetch(url + '/.well-known/bsv-identity')
