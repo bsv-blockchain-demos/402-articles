@@ -1,0 +1,57 @@
+# Merges a content-only pull request after the publish workflow's test job is green.
+# This file runs from the default branch. It checks out that branch to read the
+# allowlist and never checks out the pull request, so pull-request code cannot
+# run with the write token. Article parsing happens in docker-publish.yml, whose
+# test job is read-only.
+
+name: Auto-merge content
+
+on:
+  workflow_run:
+    workflows: ['Build and Publish Docker Image']
+    types: [completed]
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  actions: read
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: content-auto-merge-${{ github.event.pull_request.number || github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: >
+      (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'pull_request_target' &&
+        github.event.pull_request.draft == false)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out the default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install without lifecycle scripts
+        run: npm ci --ignore-scripts
+        env:
+          GITHUB_TOKEN: ''
+          GH_TOKEN: ''
+
+      - name: Merge when the pull request is eligible
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: npx tsx .github/auto-merge/run.ts

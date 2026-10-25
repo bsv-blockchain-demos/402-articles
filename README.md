@@ -45,10 +45,24 @@ The wallet code defaults to **testnet** when `CHAIN` is unset, while Compose def
 
 New stories do not need a new Docker image. The running server keeps `content/` in memory, polls git with conditional requests, and falls back to the copy baked into the image if a fetch fails.
 
-1. Add `content/<slug>.md`. The slug is the filename: lowercase letters, numbers, and hyphens.
-2. Add the picture at `content/images/<file>` and set `image` to `/images/<file>`. PNG, JPEG, GIF, and WebP are accepted. The bytes are sniffed, so a JPEG named `.png` still renders.
-3. Merge that commit to `main`, or whichever branch `CONTENT_BRANCH` names.
-4. Wait for the poll, or notify a deployment that has `CONTENT_REFRESH_TOKEN` set:
+Open a pull request to `main`:
+
+1. Add `content/<slug>.md`. The slug is the filename: lowercase letters, numbers, and hyphens, and it must be unique among the articles.
+2. Add the picture at `content/images/<file>` and set `image` to `/images/<file>`. PNG, JPEG, GIF, and WebP are accepted. The bytes are sniffed, so a JPEG named `.png` still renders. The image file has to be in the pull request, or already on the branch.
+3. Mark the pull request ready for review. Drafts are not merged automatically.
+
+CI validates every `content/*.md`. The front matter has to parse, `price` has to be a positive integer number of satoshis, the slug has to be unique, and the image file has to exist and be a real PNG, JPEG, GIF, or WebP within the size the server will load. A broken article fails the test job.
+
+The pull request merges itself when all of these are true:
+
+- The author is listed in [`.github/content-merge-allowlist.txt`](.github/content-merge-allowlist.txt). The list starts with `sirdeggen`.
+- The pull request is not a draft.
+- Every changed file is a `content/<slug>.md` article or a PNG, JPEG, GIF, or WebP under `content/images/`. A change to code, tests, or workflows stays open for a person to review.
+- The test job in [`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml) passed, including the article check, and that workflow finished green.
+
+[`.github/workflows/auto-merge-content.yml`](.github/workflows/auto-merge-content.yml) does the merge with its own `GITHUB_TOKEN`. It reads the allowlist from the default branch and does not check out the pull request. Adding a login to the allowlist changes a file outside `content/`, so that pull request needs a review.
+
+After the commit is on the branch named by `CONTENT_BRANCH` (usually `main`), wait for the poll, or notify a deployment that has `CONTENT_REFRESH_TOKEN` set:
 
 ```sh
 curl -X POST -H "Authorization: Bearer $CONTENT_REFRESH_TOKEN" https://now.bsvblockchain.tech/content/refresh
@@ -74,6 +88,16 @@ Opening paragraph. Markdown and HTML both work.
 ```
 
 `price` is an integer number of satoshis. `date` is `YYYY-MM-DD`. Rendered HTML is sanitized: scripts, iframes, event handlers, and `javascript:` URLs are removed. A paragraph may use `class="lead"`.
+
+### Repository settings for automatic merge
+
+The workflow can merge only when Actions is allowed to write.
+
+- **Settings → Actions → General → Workflow permissions**: choose **Read and write permissions**. A repository set to read-only ignores the write permission in the workflow file, and the merge does not happen.
+- **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**: turn this on when `main` requires an approving review. The workflow approves the content pull request and then merges it. Leave it off only when `main` does not require a review.
+- **Allow auto-merge** can stay off. This workflow calls the merge API once the test job is green. It does not use GitHub's auto-merge queue.
+- If a ruleset still rejects the token after that approval, add the GitHub Actions app to the ruleset bypass list.
+- Do not make the auto-merge workflow a required status check. The required check is the test job. The auto-merge job exits successfully when it skips a pull request on purpose.
 
 ## Payment flow
 
