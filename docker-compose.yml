@@ -2,13 +2,21 @@ services:
   article:
     build: .
     # Or use the published image:
-    # image: ghcr.io/sirdeggen/article:latest
+    # image: ghcr.io/bsv-blockchain-demos/402-articles:latest
     ports:
       - "3000:3000"
     environment:
       - PRIVATE_KEY=${PRIVATE_KEY}
       - CHAIN=${CHAIN:-main}
       - STORAGE_URL=${STORAGE_URL:-https://store-us-1.bsvb.tech}
+      - CONTENT_REPO=${CONTENT_REPO:-bsv-blockchain-demos/402-articles}
+      - CONTENT_BRANCH=${CONTENT_BRANCH:-main}
+      - CONTENT_PATH=${CONTENT_PATH:-content}
+      - CONTENT_POLL_MS=${CONTENT_POLL_MS:-180000}
+      - CONTENT_SOURCE=${CONTENT_SOURCE:-github}
+      - CONTENT_GITHUB_TOKEN=${CONTENT_GITHUB_TOKEN:-}
+      - CONTENT_REFRESH_TOKEN=${CONTENT_REFRESH_TOKEN:-}
+      - DOUBLE_PROXY_ALLOW_HOSTS=${DOUBLE_PROXY_ALLOW_HOSTS:-}
     env_file:
       - .env
     restart: unless-stopped

@@ -1,20 +1,181 @@
-import express from 'express'
-import path from 'path'
+import express, { NextFunction, Request, Response } from 'express'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { timingSafeEqual } from 'node:crypto'
 import cors from 'cors'
-import { createBsvPaymentMiddleware, getServerIdentityKey } from './middleware/payment.js'
-import { getAllArticles, getArticle, Article } from './articles.js'
+import { createBsvPaymentMiddleware } from './middleware/payment.js'
+import {
+  bundledContentDir,
+  ContentStore,
+  escapeHtml,
+  githubConfigFromEnv,
+  parseContentSource,
+  parsePollMs,
+  type Article
+} from './content/index.js'
 import { doublePageHtml } from './double.js'
+import { forwardAllowedPost, parseAllowHosts, ProxyError, ProxyLookup, ProxyRequester } from './proxy.js'
+import { makeWallet, ServerWallet } from './wallet.js'
 
-const app = express()
 const PORT = 3000
+const PAGE_CSP = "default-src 'none'; script-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
 
-app.use(cors({
-  exposedHeaders: ['x-bsv-sats', 'x-bsv-server']
-}))
-app.use(express.json())
-app.use(express.static(path.join(import.meta.dirname, '..')))
+export interface CreateAppOptions {
+  content?: ContentStore
+  makeWallet?: () => Promise<ServerWallet>
+  proxyAllowHosts?: string[]
+  proxyLookup?: ProxyLookup
+  proxyRequest?: ProxyRequester
+  refreshToken?: string
+}
 
-const paymentMiddleware = createBsvPaymentMiddleware()
+export async function createApp(options: CreateAppOptions = {}) {
+  const content = options.content ?? await createContentStoreFromEnv()
+  const allowHosts = options.proxyAllowHosts ?? parseAllowHosts(process.env.DOUBLE_PROXY_ALLOW_HOSTS)
+  const refreshToken = options.refreshToken ?? process.env.CONTENT_REFRESH_TOKEN?.trim() ?? ''
+  const payment = createBsvPaymentMiddleware({
+    getArticle: slug => content.getArticle(slug),
+    makeWallet: options.makeWallet
+  })
+
+  const app = express()
+  app.disable('x-powered-by')
+  app.use(cors({
+    exposedHeaders: ['x-bsv-sats', 'x-bsv-server']
+  }))
+  app.use(express.json({ limit: '100kb' }))
+
+  app.get('/', (_req, res) => {
+    pageHeaders(res)
+    const cards = content.getAllArticles().map(article => articleCard(article)).join('')
+    res.send(pageShell('The NOW\u2122 Times', cards))
+  })
+
+  app.get('/double', (_req, res) => {
+    res.set('Cache-Control', 'private, no-store')
+    res.set('X-Content-Type-Options', 'nosniff')
+    res.send(doublePageHtml())
+  })
+
+  app.post('/double/proxy', express.raw({ type: '*/*', limit: '2mb' }), async (req, res) => {
+    try {
+      const rawUrl = typeof req.query.url === 'string' ? req.query.url : ''
+      const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0)
+      const result = await forwardAllowedPost({
+        rawUrl,
+        body,
+        allowHosts,
+        lookup: options.proxyLookup,
+        request: options.proxyRequest
+      })
+      res.status(result.status).type('text/plain').send(result.body)
+    } catch (error) {
+      if (error instanceof ProxyError) {
+        const status = error.status === 400 || error.status === 403 || error.status === 413 ? error.status : 502
+        res.status(status).json({ error: error.message })
+        return
+      }
+      res.status(502).json({ error: 'upstream request failed' })
+    }
+  })
+
+  app.post('/content/refresh', async (_req, res) => {
+    if (!refreshToken) {
+      res.status(404).end()
+      return
+    }
+    const header = _req.get('authorization') ?? ''
+    const presented = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : ''
+    if (!safeEqual(presented, refreshToken)) {
+      res.status(401).end()
+      return
+    }
+    const result = await content.refresh({ force: true })
+    if (result.kind === 'failed') {
+      res.status(502).json({ status: 'failed' })
+      return
+    }
+    res.json({
+      status: result.kind,
+      articles: content.getAllArticles().length,
+      commit: result.commit ?? null
+    })
+  })
+
+  app.get('/.well-known/bsv-identity', (_req, res) => {
+    const key = payment.getIdentityKey()
+    res.json({ identityKey: key || 'not-initialized' })
+  })
+
+  app.get('/images/:name', (req, res) => {
+    const image = content.getImage(req.params.name)
+    if (!image) {
+      res.status(404).end()
+      return
+    }
+    res.set('X-Content-Type-Options', 'nosniff')
+    res.set('Cache-Control', 'public, max-age=60')
+    res.type(image.contentType).send(image.body)
+  })
+
+  app.get('/articles/:slug', (req, res, next) => {
+    pageHeaders(res)
+    next()
+  }, payment.handler, (req, res) => {
+    const article = content.getArticle(req.params.slug)
+    if (!article) {
+      res.status(404).send(pageShell('Not Found', '<p style="text-align:center;padding:60px 0;color:#888;">Article not found.</p>'))
+      return
+    }
+    res.send(pageShell(escapeHtml(article.title), articleBody(article), safeBase(req)))
+  })
+
+  app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    console.error(error)
+    if (res.headersSent) return
+    res.status(500).type('text/plain').send('Internal Server Error')
+  })
+
+  return { app, content }
+}
+
+export async function createContentStoreFromEnv(env: NodeJS.ProcessEnv = process.env): Promise<ContentStore> {
+  const source = parseContentSource(env.CONTENT_SOURCE)
+  const store = new ContentStore({
+    dir: bundledContentDir(),
+    source,
+    pollMs: parsePollMs(env.CONTENT_POLL_MS),
+    github: source === 'github' ? githubConfigFromEnv(env) : null,
+    logger: console
+  })
+  await store.loadInitial()
+  return store
+}
+
+function pageHeaders(res: Response) {
+  res.set('Cache-Control', 'private, no-store')
+  res.set('X-Content-Type-Options', 'nosniff')
+  res.set('Content-Security-Policy', PAGE_CSP)
+  res.set('Referrer-Policy', 'no-referrer')
+}
+
+function safeBase(req: Request): string | undefined {
+  const host = req.get('host') ?? ''
+  if (!/^[A-Za-z0-9.-]+(?::\d{1,5})?$/.test(host)) return undefined
+  const proto = req.protocol === 'https' ? 'https' : 'http'
+  return `${proto}://${host}/`
+}
+
+function safeEqual(presented: string, expected: string): boolean {
+  if (!presented || !expected || presented.length > 256 || expected.length > 256) return false
+  const left = Buffer.from(presented)
+  const right = Buffer.from(expected)
+  if (left.length !== right.length) {
+    timingSafeEqual(left, left)
+    return false
+  }
+  return timingSafeEqual(left, right)
+}
 
 function pageShell(title: string, body: string, baseUrl?: string) {
   return `<!DOCTYPE html>
@@ -22,7 +183,7 @@ function pageShell(title: string, body: string, baseUrl?: string) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  ${baseUrl ? `<base href="${baseUrl}">` : ''}
+  ${baseUrl ? `<base href="${escapeHtml(baseUrl)}">` : ''}
   <title>${title}</title>
   <meta name="color-scheme" content="light dark">
   <style>
@@ -70,74 +231,38 @@ function pageShell(title: string, body: string, baseUrl?: string) {
 </html>`
 }
 
-function articleCard(a: Omit<Article, 'content'>) {
+function articleCard(article: Omit<Article, 'content'>) {
+  const date = new Date(article.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   return `
     <article style="margin-bottom: 36px; padding-bottom: 36px; border-bottom: 1px solid var(--border);">
-      <a href="/articles/${a.slug}" style="text-decoration: none; display: block;">
+      <a href="/articles/${escapeHtml(article.slug)}" style="text-decoration: none; display: block;">
         <div style="width: 100%; height: 180px; border-radius: 6px; overflow: hidden; margin-bottom: 14px;">
-          <img src="${a.image}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          <img src="${escapeHtml(article.image)}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
         </div>
-        <h2 style="font-size: 1.6rem; line-height: 1.3; letter-spacing: -0.02em; margin-bottom: 8px;">${a.title}</h2>
-        <p style="color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 12px;">${a.excerpt}</p>
+        <h2 style="font-size: 1.6rem; line-height: 1.3; letter-spacing: -0.02em; margin-bottom: 8px;">${escapeHtml(article.title)}</h2>
+        <p style="color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 12px;">${escapeHtml(article.excerpt)}</p>
         <div style="font-family: system-ui, sans-serif; font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 16px; align-items: center;">
-          <span>${a.author}</span>
-          <span>${new Date(a.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-          <span style="margin-left: auto; background: var(--badge-bg); padding: 2px 10px; border-radius: 12px; color: var(--badge-text);">${a.price} sats</span>
+          <span>${escapeHtml(article.author)}</span>
+          <span>${date}</span>
+          <span style="margin-left: auto; background: var(--badge-bg); padding: 2px 10px; border-radius: 12px; color: var(--badge-text);">${article.price} sats</span>
         </div>
       </a>
     </article>`
 }
 
-app.get('/', (req, res) => {
-  const articles = getAllArticles()
-  const cards = articles.map(a => articleCard(a)).join('')
-  res.send(pageShell('The NOW\u2122 Times', cards))
-})
-
-app.get('/double', (_req, res) => {
-  res.send(doublePageHtml())
-})
-
-app.post('/double/proxy', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
-  const url = req.query.url
-  if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) {
-    return res.status(400).json({ error: 'invalid url' })
-  }
-  try {
-    const upstream = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/octet-stream' },
-      body: req.body
-    })
-    const text = await upstream.text()
-    res.status(upstream.status).type('text/plain').send(text)
-  } catch (e) {
-    res.status(502).json({ error: String(e) })
-  }
-})
-
-app.get('/.well-known/bsv-identity', (req, res) => {
-  const key = getServerIdentityKey()
-  res.json({ identityKey: key || 'not-initialized' })
-})
-
-app.get('/articles/:slug', paymentMiddleware, (req, res) => {
-  const article = getArticle(req.params.slug)
-  if (!article) {
-    return res.status(404).send(pageShell('Not Found', '<p style="text-align:center;padding:60px 0;color:#888;">Article not found.</p>'))
-  }
-
-  const body = `
+function articleBody(article: Article) {
+  const date = new Date(article.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  return `
     <article>
       <header style="margin-bottom: 32px; padding-top: 16px;">
-        <h1 style="font-size: 2.2rem; line-height: 1.2; letter-spacing: -0.03em; margin-bottom: 12px;">${article.title}</h1>
+        <h1 style="font-size: 2.2rem; line-height: 1.2; letter-spacing: -0.03em; margin-bottom: 12px;">${escapeHtml(article.title)}</h1>
         <div style="font-family: system-ui, sans-serif; font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 16px; align-items: center;">
-          <span style="font-weight: 500; color: var(--text-secondary);">${article.author}</span>
-          <span>${new Date(article.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          <span style="font-weight: 500; color: var(--text-secondary);">${escapeHtml(article.author)}</span>
+          <span>${date}</span>
         </div>
       </header>
       <div style="width: 100%; height: 320px; border-radius: 8px; overflow: hidden; margin-bottom: 32px;">
-        <img src="${article.image}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+        <img src="${escapeHtml(article.image)}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
       </div>
       <div style="font-size: 1.15rem;">
         <style>
@@ -151,11 +276,18 @@ app.get('/articles/:slug', paymentMiddleware, (req, res) => {
         Paid with BSV &middot; ${article.price} sats
       </footer>
     </article>`
+}
 
-  const baseUrl = `${req.protocol}://${req.get('host')}/`
-  res.send(pageShell(article.title, body, baseUrl))
-})
+function runningAsCli(): boolean {
+  const entry = process.argv[1]
+  if (!entry) return false
+  return import.meta.url === pathToFileURL(path.resolve(entry)).href
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`)
-})
+if (runningAsCli()) {
+  const { app, content } = await createApp()
+  content.start()
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`)
+  })
+}
